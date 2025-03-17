@@ -1,89 +1,77 @@
-# Kelas abstrak Plant
-class Plant:
-    # Constructor untuk menginisialisasi objek tanaman dengan atribut dasar
+from abc import ABC, abstractmethod  # Mengimpor modul ABC (Abstract Base Class) dan decorator abstractmethod
+
+# Kelas abstrak Plant menggunakan ABC
+class Plant(ABC):
+    # Constructor untuk inisialisasi properti dasar tanaman
     def __init__(self, name, water_needs, fertilizer_needs):
         self.name = name                   # Nama tanaman
-        self.water_needs = water_needs     # Kebutuhan air dalam liter
-        self.fertilizer_needs = fertilizer_needs  # Kebutuhan pupuk dalam kg
+        self.water_needs = water_needs     # Kebutuhan air normal (dalam liter)
+        self.fertilizer_needs = fertilizer_needs  # Kebutuhan pupuk normal (dalam kg)
     
-    # Metode grow adalah metode abstrak yang akan diimplementasikan oleh kelas turunan
-    # Metode ini menunjukkan polimorfisme, di mana setiap jenis tanaman akan tumbuh dengan cara berbeda
+    # Metode abstrak yang HARUS diimplementasikan oleh kelas turunan
+    # Decorator @abstractmethod memastikan bahwa kelas turunan harus mengimplementasikan metode ini
+    @abstractmethod
     def grow(self):
         pass
-        
-    # Metode untuk menghitung kebutuhan air dan pupuk berdasarkan kondisi lingkungan
-    def calculate_needs(self, rainfall, soil_moisture):
-        # Jika curah hujan tinggi (>= 5mm), kebutuhan air dikurangi
-        if rainfall >= 5:
-            # Kebutuhan air = kebutuhan normal - setengah dari curah hujan (tapi minimal 0)
-            needWater = max(0, self.water_needs - (rainfall * 0.5))
-        else:
-            # Jika curah hujan rendah, kebutuhan air tetap normal
-            needWater = self.water_needs
-            
-        # Jika kelembaban tanah tinggi (>= 50%), kebutuhan pupuk dikurangi menjadi 80%
-        if soil_moisture >= 50:
-            fertilizerNeeds = self.fertilizer_needs * 0.8 
-        else:
-            # Jika kelembaban tanah rendah, kebutuhan pupuk tetap normal
-            fertilizerNeeds = self.fertilizer_needs
-            
-        # Menyimpan hasil perhitungan ke dalam atribut objek
-        self.needWater = needWater
-        self.fertilizerNeeds = fertilizerNeeds
     
-    # Metode untuk menampilkan kebutuhan air dan pupuk yang telah disesuaikan
+    # Metode untuk menghitung kebutuhan air dan pupuk berdasarkan kondisi cuaca
+    def calculate_needs(self, rainfall, soil_moisture):
+        # Menghitung kebutuhan air yang disesuaikan
+        # Jika hujan >= 5mm, kebutuhan air dikurangi sebanding dengan hujan (0.5 per mm)
+        # Jika hujan < 5mm, kebutuhan air tetap normal
+        self.needWater = max(0, self.water_needs - (rainfall * 0.5)) if rainfall >= 5 else self.water_needs
+        
+        # Menghitung kebutuhan pupuk yang disesuaikan
+        # Jika kelembaban tanah >= 50%, kebutuhan pupuk dikurangi menjadi 80% dari normal
+        # Jika kelembaban tanah < 50%, kebutuhan pupuk tetap normal
+        self.fertilizerNeeds = self.fertilizer_needs * 0.8 if soil_moisture >= 50 else self.fertilizer_needs
+    
+    # Metode untuk menampilkan kebutuhan yang telah disesuaikan
     def show_needs(self):
-        print(f"Adjusted Water Needs: {self.needWater} liters")
-        print(f"Adjusted Fertilizer Needs: {self.fertilizerNeeds} kg")
+        print(f"{self.name} - Adjusted Water Needs: {self.needWater} liters")
+        print(f"{self.name} - Adjusted Fertilizer Needs: {self.fertilizerNeeds} kg\n")
 
-# Kelas turunan RicePlant yang mewarisi dari kelas Plant
+# Kelas turunan RicePlant yang mengimplementasikan Plant
 class RicePlant(Plant):
     # Constructor untuk tanaman padi
     def __init__(self):
         # Memanggil constructor dari kelas induk dengan nilai spesifik untuk padi
-        super().__init__("Rice", 20, 5)  # Padi butuh 20L air dan 5kg pupuk
-        
-    # Implementasi metode grow untuk padi
+        super().__init__("Rice", 20, 5)  # Padi membutuhkan 20L air dan 5kg pupuk
+    
+    # Implementasi metode grow yang merupakan metode abstrak dari kelas induk
+    # Implementasi ini WAJIB karena metode ini ditandai sebagai abstrak di kelas induk
     def grow(self):
         print(f"{self.name} is growing in the paddy field")
 
-# Kelas turunan CornPlant yang mewarisi dari kelas Plant
+# Kelas turunan CornPlant yang mengimplementasikan Plant
 class CornPlant(Plant):
     # Constructor untuk tanaman jagung
     def __init__(self):
         # Memanggil constructor dari kelas induk dengan nilai spesifik untuk jagung
-        super().__init__("Corn", 25, 8)  # Jagung butuh 25L air dan 8kg pupuk
+        super().__init__("Corn", 25, 8)  # Jagung membutuhkan 25L air dan 8kg pupuk
     
     # Implementasi metode grow untuk jagung
     def grow(self):
         print(f"{self.name} is growing in the farm")
 
-# Fungsi untuk mensimulasikan kondisi cuaca dan pertumbuhan tanaman
+# Fungsi untuk simulasi cuaca dan kebutuhan tanaman
 def simulate_weather():
-    # Kondisi lingkungan untuk padi
-    rainfall_rice = 10      # Curah hujan 10mm
-    soil_moisture_rice = 75 # Kelembaban tanah 75%
+    # Membuat array dari objek tanaman yang berbeda
+    plants = [RicePlant(), CornPlant()]
     
-    # Kondisi lingkungan untuk jagung
-    rainfall_corn = 2       # Curah hujan 2mm
-    soil_moisture_corn = 40 # Kelembaban tanah 40%
+    # Data cuaca untuk masing-masing tanaman
+    weather_data = [
+        {"rainfall": 10, "soil_moisture": 75},  # Data untuk Rice - hujan banyak, tanah lembab
+        {"rainfall": 2, "soil_moisture": 40}    # Data untuk Corn - hujan sedikit, tanah kering
+    ]
     
-    # Membuat objek padi dan mensimulasikan pertumbuhannya
-    rice = RicePlant()
-    rice.grow()  # Memanggil metode grow dari kelas RicePlant
-    print(f"Weather Report: Rainfall = {rainfall_rice} mm, Soil Moisture = {soil_moisture_rice}%")
-    rice.calculate_needs(rainfall_rice, soil_moisture_rice)  # Menghitung kebutuhan yang disesuaikan
-    rice.show_needs()  # Menampilkan kebutuhan yang disesuaikan
-    
-    print("\n")  # Pemisah antara simulasi padi dan jagung
-    
-    # Membuat objek jagung dan mensimulasikan pertumbuhannya
-    corn = CornPlant()
-    corn.grow()  # Memanggil metode grow dari kelas CornPlant
-    print(f"Weather Report: Rainfall = {rainfall_corn} mm, Soil Moisture = {soil_moisture_corn}%")
-    corn.calculate_needs(rainfall_corn, soil_moisture_corn)  # Menghitung kebutuhan yang disesuaikan
-    corn.show_needs()  # Menampilkan kebutuhan yang disesuaikan
+    # Melakukan iterasi untuk setiap tanaman dan data cuacanya
+    # zip() menggabungkan dua list menjadi pasangan item
+    for plant, data in zip(plants, weather_data):
+        plant.grow()  # Memanggil metode grow (polimorfisme - setiap tanaman memiliki implementasi berbeda)
+        print(f"Weather Report: Rainfall = {data['rainfall']} mm, Soil Moisture = {data['soil_moisture']}%")
+        plant.calculate_needs(data['rainfall'], data['soil_moisture'])  # Menghitung kebutuhan berdasarkan cuaca
+        plant.show_needs()  # Menampilkan kebutuhan yang disesuaikan
 
-# Menjalankan simulasi
+# Jalankan simulasi
 simulate_weather()
